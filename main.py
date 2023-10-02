@@ -5,7 +5,7 @@ import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import Message
 from aiogram.utils.keyboard import  ReplyKeyboardBuilder
-from data import SERVER_IPS, ADMIN_ID
+from data import SERVER_IPS, ADMIN_ID, OFFICE_IPS, AZK_IPS, VR_IPS
 
 dp = Dispatcher()
 
@@ -18,7 +18,8 @@ async def cmd_name(message: types.Message) -> None:
 
         builder = ReplyKeyboardBuilder()
         builder.row(
-            types.KeyboardButton(text="Проверить доступность")
+            types.KeyboardButton(text="Проверить доступность ЭЗС"),types.KeyboardButton(text="Проверить доступность камер (офис)"),
+            types.KeyboardButton(text="Проверить доступность камер АЗК"), types.KeyboardButton(text="Проверить доступность камер видеорегистратора")
         )
         await message.answer(f"Доброго времени суток, <b>{str(message.from_user.first_name)}</b>", reply_markup=builder.as_markup())
     else:
@@ -27,7 +28,7 @@ async def cmd_name(message: types.Message) -> None:
 
 
 
-@dp.message(F.text == "Проверить доступность")
+@dp.message(F.text == "Проверить доступность ЭЗС")
 async def check_whith_HTTP(message: Message) -> None:
 
     unreachable = {}
@@ -49,31 +50,70 @@ async def check_whith_HTTP(message: Message) -> None:
         await message.answer(text)
 
 
+@dp.message(F.text == "Проверить доступность камер (офис)")
+async def check_cameras_whith_HTTP(message: Message) -> None:
 
-
-
-
-async def check_servers(message: Message):
-    while True:
-        unreachable = {}
-        for ip, name in SERVER_IPS.items():
-            htt_url = f"http://{ip}:8080"
-            try:
-                r = await requests.get(htt_url, timeout=5)  # Устанавливаем таймаут для запроса
-                if r.status_code != 200:
-                    unreachable[ip] = name
-            except requests.exceptions.ConnectTimeout:
+    unreachable = {}
+    for ip, name in OFFICE_IPS.items():
+        htt_url = f"http://{ip}:80"
+        print(htt_url)
+        try:
+            r = await requests.get(htt_url, timeout=5)  # Устанавливаем таймаут для запроса
+            if r.status_code != 200:
                 unreachable[ip] = name
+        except requests.exceptions.ConnectTimeout:
+            unreachable[ip] = name
 
-        if unreachable:
-            text = "\n".join([f"Не могу достучаться до {name} ({ip})" for ip, name in unreachable.items()])
-            await message.answer(text)
-        else:
-            text = "Все сервера доступны."
-            await message.answer(text)
+    if unreachable:
+        text = "\n".join([f"Не могу достучаться до {name} ({ip})" for ip, name in unreachable.items()])
+        await message.answer(text)
+    else:
+        text = "Все камеры доступны."
+        await message.answer(text)
 
 
-        await asyncio.sleep(1800)
+@dp.message(F.text == "Проверить доступность камер АЗК")
+async def check_cameras_whith_HTTP(message: Message) -> None:
+
+    unreachable = {}
+    for ip, name in AZK_IPS.items():
+        htt_url = f"http://{ip}:80"
+        print(htt_url)
+        try:
+            r = await requests.get(htt_url, timeout=5)  # Устанавливаем таймаут для запроса
+            if r.status_code != 200:
+                unreachable[ip] = name
+        except requests.exceptions.ConnectTimeout:
+            unreachable[ip] = name
+
+    if unreachable:
+        text = "\n".join([f"Не могу достучаться до {name} ({ip})" for ip, name in unreachable.items()])
+        await message.answer(text)
+    else:
+        text = "Все камеры доступны."
+        await message.answer(text)
+
+
+@dp.message(F.text == "Проверить доступность камер видеорегистратора")
+async def check_cameras_whith_HTTP(message: Message) -> None:
+
+    unreachable = {}
+    for ip, name in VR_IPS.items():
+        htt_url = f"http://{ip}:80"
+        print(htt_url)
+        try:
+            r = await requests.get(htt_url, timeout=5)  # Устанавливаем таймаут для запроса
+            if r.status_code != 200:
+                unreachable[ip] = name
+        except requests.exceptions.ConnectTimeout:
+            unreachable[ip] = name
+
+    if unreachable:
+        text = "\n".join([f"Не могу достучаться до {name} ({ip})" for ip, name in unreachable.items()])
+        await message.answer(text)
+    else:
+        text = "Все камеры доступны."
+        await message.answer(text)
 
 
 
@@ -83,7 +123,7 @@ async def main():
     API_TOKEN = '6547737534:AAHL0blFWnnSQaQhEYPbTbl9sUrMCck4_EE'
     bot = Bot(token=API_TOKEN, parse_mode='HTML')
     await dp.start_polling(bot)
-    await check_servers()
+
 
 
 if __name__ == '__main__':
